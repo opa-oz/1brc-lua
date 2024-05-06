@@ -8,20 +8,6 @@ local function report_spent(start)
     print(string.format("\telapsed time: %.2f\n", os.clock() - start))
 end
 
-local function calc_one(stats, v)
-    if stats == nil then
-        stats = { count = 0, sum = 0, min = 100, max = -100 } -- count, sum, min=100, max=-100
-    end
-
-
-    stats['count'] = stats['count'] + 1      -- increase count by 1
-    stats['sum'] = stats['sum'] + v          -- increase sum by `value`
-    stats['min'] = math.min(stats['min'], v) -- running `min`
-    stats['max'] = math.max(stats['max'], v) -- running `max`
-
-    return stats
-end
-
 function tmemoize(func)
     return setmetatable({}, {
         __index = function(self, k)
@@ -84,9 +70,13 @@ local function main()
 
         if stations[station] == nil then
             station_names[#station_names + 1] = station
-            stations[station] = calc_one(stations[station], temperature)
+            stations[station] = { count = 0, sum = 0, min = 100, max = -100 }
         else
-            calc_one(stations[station], temperature)
+            local stats = stations[station]
+            stats['count'] = stats['count'] + 1                -- increase count by 1
+            stats['sum'] = stats['sum'] + temperature          -- increase sum by `value`
+            stats['min'] = math.min(stats['min'], temperature) -- running `min`
+            stats['max'] = math.max(stats['max'], temperature) -- running `max`
         end
     end
     print("Processed stations")
