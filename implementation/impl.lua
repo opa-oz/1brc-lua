@@ -22,23 +22,45 @@ local function calc_one(stats, v)
     return stats
 end
 
+function tmemoize(func)
+    return setmetatable({}, {
+        __index = function(self, k)
+            local v = func(k);
+            self[k] = v
+            return v;
+        end
+    });
+end
+
 local float_splitter = string.byte('.')
+local function str2float(str)
+    local dot_index = -1
+    for idx = 1, #str do
+        if str:byte(idx) == float_splitter then
+            dot_index = idx
+            break
+        end
+    end
+
+    return tonumber(str:sub(0, dot_index - 1), 10) * 10 + tonumber(str:sub(dot_index + 1, #str), 10)
+end
+
 local target_splitter = string.byte(';')
 local function split_line(line)
     local target_index = -1
-    local dot_index = -1
 
     for idx = 1, #line do
         if line:byte(idx) == target_splitter then
             target_index = idx
-        end
-        if target_index ~= -1 and line:byte(idx) == float_splitter then
-            dot_index = idx
+            break
         end
     end
 
-    return line:sub(0, target_index - 1),
-        tonumber(line:sub(target_index + 1, dot_index - 1), 10) * 10 + tonumber(line:sub(dot_index + 1, #line), 10)
+    local station = line:sub(0, target_index - 1)
+    local temperature = line:sub(target_index + 1, #line)
+
+    return station,
+        temperature
 end
 
 local function main()
@@ -47,6 +69,7 @@ local function main()
     local start_time = os.clock()
     local stations = {}
     local station_names = {}
+    local m_str2float = tmemoize(str2float)
 
     if not file_exists(filepath) then
         error("There is no measurements file")
@@ -56,7 +79,8 @@ local function main()
     report_spent(start_time)
 
     for line in io.lines(filepath) do
-        local station, temperature = split_line(line)
+        local station, tmp = split_line(line)
+        local temperature = m_str2float[tmp]
 
         if stations[station] == nil then
             station_names[#station_names + 1] = station
