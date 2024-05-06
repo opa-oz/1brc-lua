@@ -10,7 +10,7 @@ end
 
 local function calc_one(stats, v)
     if stats == nil then
-        stats = { count = 0, sum = 0, min = 1 / 0, max = -100 } -- count, sum, min=Infinity, max=-100
+        stats = { count = 0, sum = 0, min = 100, max = -100 } -- count, sum, min=100, max=-100
     end
 
 
@@ -73,8 +73,11 @@ local function main()
 
         if stations[station] == nil then
             station_names[#station_names + 1] = station
+            stations[station] = calc_one(stations[station], temperature)
+        else
+            calc_one(stations[station], temperature)
         end
-        stations[station] = calc_one(stations[station], temperature)
+
     end
     print("Processed stations")
     report_spent(start_time)
