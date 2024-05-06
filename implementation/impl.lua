@@ -4,17 +4,6 @@ local function file_exists(file)
     return f ~= nil
 end
 
-local function lines_from(file)
-    if not file_exists(file) then return {} end
-    local count = 0
-    local lines = {}
-    for line in io.lines(file) do
-        lines[#lines + 1] = line
-        count = count + 1
-    end
-    return lines, count
-end
-
 local function report_spent(start)
     print(string.format("\telapsed time: %.2f\n", os.clock() - start))
 end
@@ -78,17 +67,9 @@ local function main()
     end
     report_spent(start_time)
 
-    local lines, count = lines_from(filepath)
-    print("Lines were read", count)
-    report_spent(start_time)
-
-    for k, line in pairs(lines) do
+    for line in io.lines(filepath) do
         local station, tmp = split_line(line)
         local temperature = str2float(tmp)
-
-        if k == 1 then
-            print(station, temperature)
-        end
 
         if stations[station] == nil then
             station_names[#station_names + 1] = station
