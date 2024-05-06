@@ -23,36 +23,24 @@ local function calc_one(stats, v)
 end
 
 local float_splitter = string.byte('.')
-local function str2float(str)
-    local dot_index = -1
-    for idx = 1, #str do
-        if str:byte(idx) == float_splitter then
-            dot_index = idx
-            break
-        end
-    end
-
-    return tonumber(str:sub(0, dot_index - 1), 10) * 10 + tonumber(str:sub(dot_index + 1, #str), 10)
-end
-
 local target_splitter = string.byte(';')
 local function split_line(line)
     local target_index = -1
+    local dot_index = -1
+
     for idx = 1, #line do
         if line:byte(idx) == target_splitter then
             target_index = idx
-            break
+        end
+        if target_index ~= -1 and line:byte(idx) == float_splitter then
+            dot_index = idx
         end
     end
 
-    return line:sub(0, target_index - 1), line:sub(target_index + 1, #line)
+    return line:sub(0, target_index - 1),
+        tonumber(line:sub(target_index + 1, dot_index - 1), 10) * 10 + tonumber(line:sub(dot_index + 1, #line), 10)
 end
 
--- calculate
---  `count`
---  `sum`
---  `min`
---  `max`
 local function main()
     local filepath = './data/measurements.txt'
     local outpath = './output/results.txt'
@@ -68,8 +56,7 @@ local function main()
     report_spent(start_time)
 
     for line in io.lines(filepath) do
-        local station, tmp = split_line(line)
-        local temperature = str2float(tmp)
+        local station, temperature = split_line(line)
 
         if stations[station] == nil then
             station_names[#station_names + 1] = station
@@ -77,7 +64,6 @@ local function main()
         else
             calc_one(stations[station], temperature)
         end
-
     end
     print("Processed stations")
     report_spent(start_time)
@@ -106,7 +92,8 @@ local function main()
 
         out_file:write('\n')
     end
-
+    print("Result saved")
+    report_spent(start_time)
     out_file:close()
 end
 
