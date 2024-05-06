@@ -8,7 +8,7 @@ local function report_spent(start)
     print(string.format("\telapsed time: %.2f\n", os.clock() - start))
 end
 
-function tmemoize(func)
+local function tmemoize(func)
     return setmetatable({}, {
         __index = function(self, k)
             local v = func(k);
@@ -18,32 +18,19 @@ function tmemoize(func)
     });
 end
 
-local float_splitter = string.byte('.')
+local float_splitter = "."
 local function str2float(str)
-    local dot_index = -1
-    for idx = 1, #str do
-        if str:byte(idx) == float_splitter then
-            dot_index = idx
-            break
-        end
-    end
+    local dot_index = string.find(str, float_splitter, 1, true)
 
-    return tonumber(str:sub(0, dot_index - 1), 10) * 10 + tonumber(str:sub(dot_index + 1, #str), 10)
+    return math.tointeger(str:sub(0, dot_index - 1)) * 10 + math.tointeger(str:sub(dot_index + 1))
 end
 
-local target_splitter = string.byte(';')
+local splitter = ";"
 local function split_line(line)
-    local target_index = -1
-
-    for idx = 1, #line do
-        if line:byte(idx) == target_splitter then
-            target_index = idx
-            break
-        end
-    end
+    local target_index = string.find(line, splitter, 1, true)
 
     local station = line:sub(0, target_index - 1)
-    local temperature = line:sub(target_index + 1, #line)
+    local temperature = line:sub(target_index + 1)
 
     return station,
         temperature
@@ -88,8 +75,8 @@ local function main()
 
     local out_file = assert(io.open(outpath, "w"))
 
-    for _, k in ipairs(station_names) do
-        local v = stations[k]
+    for k = 1, #station_names do
+        local v = stations[station_names[k]]
         out_file:write(k)
         out_file:write(";")
         out_file:write(
