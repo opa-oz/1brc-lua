@@ -5,7 +5,7 @@ help:
 
 
 generate: ## Generate file with defined lines amount
-	python generator/main.py 1000000
+	python generator/main.py 100000000
 
 .PHONY: generate
 
