@@ -19,7 +19,6 @@ local function tmemoize(func)
 end
 
 local float_splitter = "."
-local splitter = ";"
 local function str2float(str)
     local dot_index = string.find(str, float_splitter, 1, true)
 
@@ -44,7 +43,6 @@ local function main()
 
     local BUFSIZE = 2 ^ 13               -- 8K
     local f = assert(io.input(filepath)) -- open input file
-    local new_line = "\n"
 
     while true do
         local lines, rest = f:read(BUFSIZE, "*line")
@@ -53,21 +51,8 @@ local function main()
             lines = table.concat({ [1] = lines, [2] = rest })
         end
 
-        local start_index = 0
-        local index = string.find(lines, new_line, start_index, true)
-        while index do
-            start_index = index + 1
-            index = string.find(lines, new_line, start_index, true)
-            local target_index = string.find(lines, splitter, start_index, true)
-            if not target_index then
-                break
-            end
-            local station = lines:sub(start_index, target_index - 1)
-            local end_index = index
-            if not end_index then
-                end_index = #lines
-            end
-            local temperature = m_str2float[lines:sub(target_index + 1, end_index)]
+        for station, tmp in lines:gmatch("(\n?[^;]+);([0-9-.]+)") do
+            local temperature = m_str2float[tmp]
 
             if stations[station] == nil then
                 station_names[#station_names + 1] = station
