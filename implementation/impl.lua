@@ -43,15 +43,20 @@ local function main()
 
     local BUFSIZE = 2 ^ 13               -- 8K
     local f = assert(io.input(filepath)) -- open input file
+    local to_concat = {}
 
     while true do
         local lines, rest = f:read(BUFSIZE, "*line")
         if not lines then break end
         if rest then
-            lines = table.concat({ [1] = lines, [2] = rest })
+            to_concat[1] = lines
+            to_concat[2] = rest
+            lines = table.concat(to_concat)
+            to_concat[1] = nil
+            to_concat[2] = nil
         end
 
-        for station, tmp in lines:gmatch("(\n?[^;]+);([0-9-.]+)") do
+        for station, tmp in lines:gmatch("\n?([^;]+);([0-9-.]+)") do
             local temperature = m_str2float[tmp]
 
             if stations[station] == nil then
