@@ -27,33 +27,44 @@ end
 
 
 local function main()
-    local filepath = './data/measurements.txt'
     local outpath = './output/results.txt'
     local start_time = os.clock()
     local stations = {}
     local station_names = {}
     local m_str2float = tmemoize(str2float)
 
-    if not file_exists(filepath) then
-        error("There is no measurements file")
-    else
-        print("File was found, process")
-    end
-    report_spent(start_time)
+    local producer = coroutine.create(function()
+        local filepath = './data/measurements.txt'
+        if not file_exists(filepath) then
+            error("There is no measurements file")
+        else
+            print("File was found, process")
+        end
+        report_spent(start_time)
 
-    local BUFSIZE = 2 ^ 13               -- 8K
-    local f = assert(io.input(filepath)) -- open input file
-    local to_concat = {}
+        local BUFSIZE = 2 ^ 13               -- 8K
+        local f = assert(io.input(filepath)) -- open input file
+        local to_concat = {}
+
+        while true do
+            local lines, rest = f:read(BUFSIZE, "*line")
+            if not lines then break end
+            if rest then
+                to_concat[1] = lines
+                to_concat[2] = rest
+                lines = table.concat(to_concat)
+                to_concat[1] = nil
+                to_concat[2] = nil
+            end
+
+            coroutine.yield(lines)
+        end
+    end)
 
     while true do
-        local lines, rest = f:read(BUFSIZE, "*line")
-        if not lines then break end
-        if rest then
-            to_concat[1] = lines
-            to_concat[2] = rest
-            lines = table.concat(to_concat)
-            to_concat[1] = nil
-            to_concat[2] = nil
+        local _, lines = coroutine.resume(producer)
+        if not lines then
+            break
         end
 
         for station, tmp in lines:gmatch("\n?([^;]+);([0-9-.]+)") do
